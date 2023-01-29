@@ -1,11 +1,19 @@
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
 import { idParamSchema } from '../../utils/reusedSchemas';
-import { createUserBodySchema, changeUserBodySchema, subscribeBodySchema } from './schemas';
+import {
+  createUserBodySchema,
+  changeUserBodySchema,
+  subscribeBodySchema,
+} from './schemas';
 import type { UserEntity } from '../../utils/DB/entities/DBUsers';
 import * as userService from '../../services/userService';
 
-const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> => {
+const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
+  fastify
+): Promise<void> => {
   fastify.get('/', async function (request, reply): Promise<UserEntity[]> {
+    console.log('getUsers');
+    fastify.log.info('hello world');
     return userService.getUsers.apply(fastify.db);
   });
 
@@ -68,7 +76,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> 
       try {
         const { userId } = request.body;
         const { id } = request.params;
-        const user = await userService.subscribeTo.apply(fastify.db, [id, userId]);
+        const user = await userService.subscribeTo.apply(fastify.db, [
+          id,
+          userId,
+        ]);
         return user;
       } catch {
         throw this.httpErrors.badRequest();
@@ -88,7 +99,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> 
       try {
         const { userId } = request.body;
         const { id } = request.params;
-        const newUser = await userService.unsubscribeFrom.apply(fastify.db, [id, userId]);
+        const newUser = await userService.unsubscribeFrom.apply(fastify.db, [
+          id,
+          userId,
+        ]);
         return newUser;
       } catch {
         throw this.httpErrors.badRequest();
@@ -107,7 +121,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> 
     async function (request, reply): Promise<UserEntity> {
       try {
         const { id } = request.params;
-        const user = await userService.updateUser.apply(fastify.db, [id, request.body]);
+        const user = await userService.updateUser.apply(fastify.db, [
+          id,
+          request.body,
+        ]);
         return user;
       } catch {
         throw this.httpErrors.badRequest();
