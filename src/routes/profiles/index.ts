@@ -4,7 +4,9 @@ import { createProfileBodySchema, changeProfileBodySchema } from './schema';
 import type { ProfileEntity } from '../../utils/DB/entities/DBProfiles';
 import { profileService } from '../../services';
 
-const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> => {
+const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
+  fastify
+): Promise<void> => {
   fastify.get('/', async function (request, reply): Promise<ProfileEntity[]> {
     return profileService.getProfiles.apply(fastify.db);
   });
@@ -18,7 +20,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> 
     },
     async function (request, reply): Promise<ProfileEntity> {
       const { id } = request.params;
-      const profile = await profileService.getSingleProfile.apply(fastify.db, [id]);
+      const profile = await profileService.getProfileById.apply(fastify.db, [
+        id,
+      ]);
       if (!profile) {
         throw fastify.httpErrors.notFound();
       }
@@ -35,7 +39,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> 
     },
     async function (request, reply): Promise<ProfileEntity> {
       try {
-        const profile = await profileService.addProfile.apply(fastify.db, [request.body]);
+        const profile = await profileService.addProfile.apply(fastify.db, [
+          request.body,
+        ]);
         return profile;
       } catch {
         throw fastify.httpErrors.badRequest();
@@ -53,7 +59,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> 
     async function (request, reply): Promise<ProfileEntity> {
       try {
         const { id } = request.params;
-        const profile = await profileService.removeProfile.apply(fastify.db, [id]);
+        const profile = await profileService.removeProfile.apply(fastify.db, [
+          id,
+        ]);
         return profile;
       } catch {
         throw fastify.httpErrors.badRequest();
@@ -72,7 +80,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> 
     async function (request, reply): Promise<ProfileEntity> {
       try {
         const { id } = request.params;
-        const profile = await profileService.updateProfile.apply(fastify.db, [id, request.body]);
+        const profile = await profileService.updateProfile.apply(fastify.db, [
+          id,
+          request.body,
+        ]);
         return profile;
       } catch {
         throw fastify.httpErrors.badRequest();

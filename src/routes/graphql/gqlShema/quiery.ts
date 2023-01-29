@@ -42,7 +42,7 @@ export const RootQuery = new GraphQLObjectType({
       type: profileType,
       args: { id: { type: new GraphQLNonNull(GraphQLID) } },
       resolve: (source, { id }, context) =>
-        profileService.getSingleProfile.apply(context.fastify.db, [id]),
+        profileService.getProfileById.apply(context.fastify.db, [id]),
     },
     post: {
       type: postType,

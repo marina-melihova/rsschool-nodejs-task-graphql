@@ -1,3 +1,4 @@
+import { ProfileEntity } from './../../../utils/DB/entities/DBProfiles';
 import {
   GraphQLObjectType,
   GraphQLInputObjectType,
@@ -8,6 +9,13 @@ import {
   GraphQLList,
   GraphQLNonNull,
 } from 'graphql';
+import DataLoader from 'dataloader';
+import {
+  profileService,
+  // postService,
+  // userService,
+  // memberTypeService,
+} from '../../../services';
 
 export const postType = new GraphQLObjectType({
   name: 'Post',
@@ -78,11 +86,36 @@ export const userType: GraphQLOutputType = new GraphQLObjectType({
     },
     profile: {
       type: profileType,
-      resolve: async (source, args, context) =>
-        context.fastify.db.profiles.findOne({
-          key: 'userId',
-          equals: source.id,
-        }),
+      resolve: async (source, args, context, info) => {
+        const { dataloaders } = context;
+
+        // единожды инициализируем DataLoader для получения профилей по ids
+        let dl = dataloaders.get(info.fieldNodes);
+        if (!dl) {
+          dl = new DataLoader(async (ids: any) => {
+            // обращаемся в базу чтоб получить профили по ids
+            const rows = await profileService.getProfilesByUserIds.apply(
+              context.fastify.db,
+              [ids]
+            );
+            // IMPORTANT: сортируем данные из базы в том порядке, как нам передали ids
+            const sortedInIdsOrder = ids.map((id: string) =>
+              rows.find((row: ProfileEntity) => row.id === id)
+            );
+            return sortedInIdsOrder;
+          });
+          // ложим инстанс дата-лоадера в WeakMap для повторного использования
+          dataloaders.set(info.fieldNodes, dl);
+        }
+
+        // юзаем метод `load` из нашего дата-лоадера
+        return dl.load(source.id);
+        /* вместо того, как было без DataLoader
+        return profileService.getProfileByUserId.apply(context.fastify.db, [
+          source.id,
+        ]);
+*/
+      },
     },
     posts: {
       type: new GraphQLList(postType),
