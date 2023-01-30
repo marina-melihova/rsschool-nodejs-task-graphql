@@ -104,6 +104,12 @@ Run the application in development mode
 npm run dev
 ```
 
+Seed database by fake data:
+
+```
+npm run start:seed
+```
+
 ## 💻 How to use
 
 The application will run on `http://localhost:3000` and you can use Postman to send REST requests from this url.
