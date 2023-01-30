@@ -23,8 +23,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<UserEntity> {
-      const { id } = request.params;
+    async function ({ params: { id } }, reply): Promise<UserEntity> {
       const user = await userServise.getUserById(id);
       if (!user) {
         throw this.httpErrors.notFound('User not found');
@@ -40,8 +39,8 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         body: createUserBodySchema,
       },
     },
-    async function (request, reply): Promise<UserEntity> {
-      return userServise.addUser(request.body);
+    async function ({ body }, reply): Promise<UserEntity> {
+      return userServise.addUser(body);
     }
   );
 
@@ -52,9 +51,8 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<UserEntity> {
+    async function ({ params: { id } }, reply): Promise<UserEntity> {
       try {
-        const { id } = request.params;
         const user = await userServise.removeUser(id);
         return user;
       } catch {
@@ -71,12 +69,11 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<UserEntity> {
+    async function (
+      { body: { userId }, params: { id } },
+      reply
+    ): Promise<UserEntity> {
       try {
-        const {
-          body: { userId },
-          params: { id },
-        } = request;
         const user = await userServise.subscribeTo(id, userId);
         return user;
       } catch {
@@ -93,12 +90,11 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<UserEntity> {
+    async function (
+      { body: { userId }, params: { id } },
+      reply
+    ): Promise<UserEntity> {
       try {
-        const {
-          body: { userId },
-          params: { id },
-        } = request;
         const newUser = await userServise.unsubscribeFrom(id, userId);
         return newUser;
       } catch {
@@ -115,12 +111,8 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<UserEntity> {
+    async function ({ body, params: { id } }, reply): Promise<UserEntity> {
       try {
-        const {
-          body,
-          params: { id },
-        } = request;
         const user = await userServise.updateUser(id, body);
         return user;
       } catch {

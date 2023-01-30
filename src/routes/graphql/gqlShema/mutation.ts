@@ -25,11 +25,8 @@ export const Mutations = new GraphQLObjectType({
     addUser: {
       type: userType,
       args: { body: { type: new GraphQLNonNull(CreateUserInput) } },
-      async resolve(source, { body }, context) {
-        const {
-          fastify: { db },
-        } = context;
-        const userServise = UserService(db);
+      async resolve(source, { body }, { fastify }) {
+        const userServise = UserService(fastify.db);
         return userServise.addUser(body);
       },
     },
@@ -45,7 +42,7 @@ export const Mutations = new GraphQLObjectType({
           const user = await userServise.updateUser(id, body);
           return user;
         } catch {
-          throw fastify.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest('Data is incorrect');
         }
       },
     },
@@ -61,7 +58,7 @@ export const Mutations = new GraphQLObjectType({
           const user = await userServise.subscribeTo(id, subscriberId);
           return user;
         } catch {
-          throw fastify.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest('Data is incorrect');
         }
       },
     },
@@ -77,7 +74,7 @@ export const Mutations = new GraphQLObjectType({
           const user = await userServise.unsubscribeFrom(id, subscriberId);
           return user;
         } catch {
-          throw fastify.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest('Data is incorrect');
         }
       },
     },
@@ -114,7 +111,7 @@ export const Mutations = new GraphQLObjectType({
           const post = await postService.updatePost(id, body);
           return post;
         } catch {
-          throw fastify.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest('Data is incorrect');
         }
       },
     },
@@ -127,18 +124,15 @@ export const Mutations = new GraphQLObjectType({
           const post = await postService.removePost(id);
           return post;
         } catch {
-          throw fastify.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest('ID is incorrect');
         }
       },
     },
     addProfile: {
       type: profileType,
       args: { body: { type: new GraphQLNonNull(CreateProfileInput) } },
-      resolve: async (source, { body }, context) => {
-        const {
-          fastify: { db },
-        } = context;
-        const profileService = ProfileService(db);
+      resolve: async (source, { body }, { fastify }) => {
+        const profileService = ProfileService(fastify.db);
         return profileService.addProfile(body);
       },
     },
@@ -154,7 +148,7 @@ export const Mutations = new GraphQLObjectType({
           const profile = await profileService.updateProfile(id, body);
           return profile;
         } catch {
-          throw fastify.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest('Data is incorrect');
         }
       },
     },
@@ -167,7 +161,7 @@ export const Mutations = new GraphQLObjectType({
           const profile = await profileService.removeProfile(id);
           return profile;
         } catch {
-          throw fastify.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest('ID is incorrect');
         }
       },
     },
@@ -183,7 +177,7 @@ export const Mutations = new GraphQLObjectType({
           const memberType = await memberTypeService.updateMemberType(id, body);
           return memberType;
         } catch {
-          throw fastify.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest('Data is incorrect');
         }
       },
     },

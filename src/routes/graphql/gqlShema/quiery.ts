@@ -79,7 +79,7 @@ export const RootQuery = new GraphQLObjectType({
         const memberTypeService = MemberTypeService(fastify.db);
         const memberType = memberTypeService.getMemberTypeById(id);
         if (!memberType) {
-          throw fastify.httpErrors.notFound('Post not found');
+          throw fastify.httpErrors.notFound('Member type not found');
         }
         return memberType;
       },

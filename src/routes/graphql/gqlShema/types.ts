@@ -4,6 +4,7 @@ import {
   GraphQLOutputType,
   GraphQLString,
   GraphQLInt,
+  GraphQLFloat,
   GraphQLID,
   GraphQLList,
   GraphQLNonNull,
@@ -28,13 +29,13 @@ export const postType = new GraphQLObjectType({
   }),
 });
 
-export const profileType = new GraphQLObjectType({
+export const profileType: GraphQLOutputType = new GraphQLObjectType({
   name: 'Profile',
   fields: () => ({
     id: { type: new GraphQLNonNull(GraphQLID) },
     avatar: { type: new GraphQLNonNull(GraphQLString) },
     sex: { type: new GraphQLNonNull(GraphQLString) },
-    birthday: { type: new GraphQLNonNull(GraphQLInt) },
+    birthday: { type: new GraphQLNonNull(GraphQLFloat) },
     country: { type: new GraphQLNonNull(GraphQLString) },
     street: { type: new GraphQLNonNull(GraphQLString) },
     city: { type: new GraphQLNonNull(GraphQLString) },

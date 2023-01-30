@@ -19,11 +19,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {
-      const { id } = request.params;
+    async function ({ params: { id } }, reply): Promise<ProfileEntity> {
       const profile = await profileService.getProfileById(id);
       if (!profile) {
-        throw fastify.httpErrors.notFound();
+        throw fastify.httpErrors.notFound('Profile not found');
       }
       return profile;
     }
@@ -36,12 +35,12 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         body: createProfileBodySchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {
+    async function ({ body }, reply): Promise<ProfileEntity> {
       try {
-        const profile = await profileService.addProfile(request.body);
+        const profile = await profileService.addProfile(body);
         return profile;
       } catch {
-        throw fastify.httpErrors.badRequest();
+        throw fastify.httpErrors.badRequest('Data is incorrect');
       }
     }
   );
@@ -53,13 +52,12 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {
+    async function ({ params: { id } }, reply): Promise<ProfileEntity> {
       try {
-        const { id } = request.params;
         const profile = await profileService.removeProfile(id);
         return profile;
       } catch {
-        throw fastify.httpErrors.badRequest();
+        throw fastify.httpErrors.badRequest('ID is incorrect');
       }
     }
   );
@@ -72,13 +70,12 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {
+    async function ({ params: { id }, body }, reply): Promise<ProfileEntity> {
       try {
-        const { id } = request.params;
-        const profile = await profileService.updateProfile(id, request.body);
+        const profile = await profileService.updateProfile(id, body);
         return profile;
       } catch {
-        throw fastify.httpErrors.badRequest();
+        throw fastify.httpErrors.badRequest('Data is incorrect');
       }
     }
   );

@@ -19,11 +19,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {
-      const { id } = request.params;
+    async function ({ params: { id } }, reply): Promise<PostEntity> {
       const post = await postService.getPostById(id);
       if (!post) {
-        throw fastify.httpErrors.notFound();
+        throw fastify.httpErrors.notFound('Post not found');
       }
       return post;
     }
@@ -36,12 +35,12 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         body: createPostBodySchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {
+    async function ({ body }, reply): Promise<PostEntity> {
       try {
-        const post = await postService.addPost(request.body);
+        const post = await postService.addPost(body);
         return post;
       } catch {
-        throw fastify.httpErrors.badRequest();
+        throw fastify.httpErrors.badRequest('Data is incorrect');
       }
     }
   );
@@ -53,13 +52,12 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {
+    async function ({ params: { id } }, reply): Promise<PostEntity> {
       try {
-        const { id } = request.params;
         const post = await postService.removePost(id);
         return post;
       } catch {
-        throw fastify.httpErrors.badRequest();
+        throw fastify.httpErrors.badRequest('ID is incorrect');
       }
     }
   );
@@ -77,7 +75,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         const post = await postService.updatePost(id, body);
         return post;
       } catch {
-        throw fastify.httpErrors.badRequest();
+        throw fastify.httpErrors.badRequest('Data is incorrect');
       }
     }
   );
