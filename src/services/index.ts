@@ -1,4 +1,4 @@
-export * as userService from './userService';
-export * as postService from './postService';
-export * as profileService from './profileService';
-export * as memberTypeService from './memberTypeService';
+export { UserService } from './userService';
+export { PostService } from './postService';
+export { ProfileService } from './profileService';
+export { MemberTypeService } from './memberTypeService';

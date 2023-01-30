@@ -5,14 +5,10 @@ export type MemberTypeEntity = {
   discount: number;
   monthPostsLimit: number;
 };
-type CreateMemberTypeDTO = MemberTypeEntity;
-type ChangeMemberTypeDTO = Partial<Omit<MemberTypeEntity, 'id'>>;
+export type CreateMemberTypeDTO = MemberTypeEntity;
+export type ChangeMemberTypeDTO = Partial<Omit<MemberTypeEntity, 'id'>>;
 
-export default class DBMemberTypes extends DBEntity<
-  MemberTypeEntity,
-  ChangeMemberTypeDTO,
-  CreateMemberTypeDTO
-> {
+export default class DBMemberTypes extends DBEntity<MemberTypeEntity, ChangeMemberTypeDTO, CreateMemberTypeDTO> {
   constructor() {
     super();
 
@@ -29,9 +25,7 @@ export default class DBMemberTypes extends DBEntity<
 
     const forbidOperationTrap: ProxyHandler<any> = {
       apply(target) {
-        throw new Error(
-          `forbidden operation: cannot ${target.name} a member type`
-        );
+        throw new Error(`forbidden operation: cannot ${target.name} a member type`);
       },
     };
 

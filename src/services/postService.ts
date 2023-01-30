@@ -1,29 +1,37 @@
 import DB from '../utils/DB/DB';
-import type { PostEntity } from '../utils/DB/entities/DBPosts';
+import type {
+  CreatePostDTO,
+  ChangePostDTO,
+} from '../utils/DB/entities/DBPosts';
 
-type CreatePostDTO = Omit<PostEntity, 'id'>;
-type ChangePostDTO = Partial<Omit<PostEntity, 'id' | 'userId'>>;
+export const PostService = (db: DB) => {
+  const getPosts = async () => db.posts.findMany();
 
-export async function getPosts(this: DB) {
-  return this.posts.findMany();
-}
+  const getPostsByUserIds = async (id: string) =>
+    db.posts.findMany({ key: 'userId', equals: id });
 
-export async function getSinglePost(this: DB, id: string) {
-  return this.posts.findOne({ key: 'id', equals: id });
-}
+  const getPostById = async (id: string) =>
+    db.posts.findOne({ key: 'id', equals: id });
 
-export async function addPost(this: DB, body: CreatePostDTO) {
-  const user = this.users.findOne({ key: 'id', equals: body.userId });
-  if (!user) {
-    throw new Error('Bad request');
-  }
-  return this.posts.create(body);
-}
+  const addPost = async (body: CreatePostDTO) => {
+    const user = db.users.findOne({ key: 'id', equals: body.userId });
+    if (!user) {
+      throw new Error('Bad request');
+    }
+    return db.posts.create(body);
+  };
 
-export async function updatePost(this: DB, id: string, body: ChangePostDTO) {
-  return this.posts.change(id, body);
-}
+  const updatePost = async (id: string, body: ChangePostDTO) =>
+    db.posts.change(id, body);
 
-export async function removePost(this: DB, id: string) {
-  return this.posts.delete(id);
-}
+  const removePost = async (id: string) => db.posts.delete(id);
+
+  return {
+    getPosts,
+    getPostById,
+    addPost,
+    updatePost,
+    removePost,
+    getPostsByUserIds,
+  };
+};

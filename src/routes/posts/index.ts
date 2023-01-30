@@ -2,11 +2,14 @@ import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-sc
 import { idParamSchema } from '../../utils/reusedSchemas';
 import { createPostBodySchema, changePostBodySchema } from './schema';
 import type { PostEntity } from '../../utils/DB/entities/DBPosts';
-import { postService } from '../../services';
+import { PostService } from '../../services';
 
-const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> => {
+const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
+  fastify
+): Promise<void> => {
+  const postService = PostService(fastify.db);
   fastify.get('/', async function (request, reply): Promise<PostEntity[]> {
-    return postService.getPosts.apply(fastify.db);
+    return postService.getPosts();
   });
 
   fastify.get(
@@ -18,7 +21,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> 
     },
     async function (request, reply): Promise<PostEntity> {
       const { id } = request.params;
-      const post = await postService.getSinglePost.apply(fastify.db, [id]);
+      const post = await postService.getPostById(id);
       if (!post) {
         throw fastify.httpErrors.notFound();
       }
@@ -35,7 +38,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> 
     },
     async function (request, reply): Promise<PostEntity> {
       try {
-        const post = await postService.addPost.apply(fastify.db, [request.body]);
+        const post = await postService.addPost(request.body);
         return post;
       } catch {
         throw fastify.httpErrors.badRequest();
@@ -53,7 +56,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> 
     async function (request, reply): Promise<PostEntity> {
       try {
         const { id } = request.params;
-        const post = await postService.removePost.apply(fastify.db, [id]);
+        const post = await postService.removePost(id);
         return post;
       } catch {
         throw fastify.httpErrors.badRequest();
@@ -69,10 +72,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> 
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {
-      const { id } = request.params;
+    async function ({ params: { id }, body }, reply): Promise<PostEntity> {
       try {
-        const post = await postService.updatePost.apply(fastify.db, [id, request.body]);
+        const post = await postService.updatePost(id, body);
         return post;
       } catch {
         throw fastify.httpErrors.badRequest();

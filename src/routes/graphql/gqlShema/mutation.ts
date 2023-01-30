@@ -13,10 +13,10 @@ import {
   ChangeMemberTypeInput,
 } from './types';
 import {
-  postService,
-  userService,
-  profileService,
-  memberTypeService,
+  UserService,
+  PostService,
+  ProfileService,
+  MemberTypeService,
 } from '../../../services';
 
 export const Mutations = new GraphQLObjectType({
@@ -26,7 +26,11 @@ export const Mutations = new GraphQLObjectType({
       type: userType,
       args: { body: { type: new GraphQLNonNull(CreateUserInput) } },
       async resolve(source, { body }, context) {
-        return userService.addUser.apply(context.fastify.db, [body]);
+        const {
+          fastify: { db },
+        } = context;
+        const userServise = UserService(db);
+        return userServise.addUser(body);
       },
     },
     editUser: {
@@ -35,15 +39,13 @@ export const Mutations = new GraphQLObjectType({
         id: { type: GraphQLID },
         body: { type: new GraphQLNonNull(ChangeUserInput) },
       },
-      resolve: async (source, { id, body }, context) => {
+      resolve: async (source, { id, body }, { fastify }) => {
         try {
-          const user = await userService.updateUser.apply(context.fastify.db, [
-            id,
-            body,
-          ]);
+          const userServise = UserService(fastify.db);
+          const user = await userServise.updateUser(id, body);
           return user;
         } catch {
-          throw context.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest();
         }
       },
     },
@@ -53,15 +55,13 @@ export const Mutations = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(GraphQLID) },
         subscriberId: { type: new GraphQLNonNull(GraphQLID) },
       },
-      resolve: async (source, { id, subscriberId }, context) => {
+      resolve: async (source, { id, subscriberId }, { fastify }) => {
         try {
-          const user = await userService.subscribeTo.apply(context.fastify.db, [
-            id,
-            subscriberId,
-          ]);
+          const userServise = UserService(fastify.db);
+          const user = await userServise.subscribeTo(id, subscriberId);
           return user;
         } catch {
-          throw context.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest();
         }
       },
     },
@@ -71,35 +71,35 @@ export const Mutations = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(GraphQLID) },
         subscriberId: { type: new GraphQLNonNull(GraphQLID) },
       },
-      resolve: async (source, { id, subscriberId }, context) => {
+      resolve: async (source, { id, subscriberId }, { fastify }) => {
         try {
-          const user = await userService.unsubscribeFrom.apply(context.fastify.db, [
-            id,
-            subscriberId,
-          ]);
+          const userServise = UserService(fastify.db);
+          const user = await userServise.unsubscribeFrom(id, subscriberId);
           return user;
         } catch {
-          throw context.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest();
         }
       },
     },
     deleteUser: {
       type: userType,
       args: { id: { type: new GraphQLNonNull(GraphQLID) } },
-      resolve: async (source, { id }, context) => {
+      resolve: async (source, { id }, { fastify }) => {
         try {
-          const user = await userService.removeUser.apply(context.fastify.db, [id]);
+          const userServise = UserService(fastify.db);
+          const user = await userServise.removeUser(id);
           return user;
         } catch {
-          throw context.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest('ID id incorrect');
         }
       },
     },
     addPost: {
       type: postType,
       args: { body: { type: new GraphQLNonNull(CreatePostInput) } },
-      resolve: async (source, { body }, context) => {
-        return postService.addPost.apply(context.fastify.db, [body]);
+      resolve: async (source, { body }, { fastify: { db } }) => {
+        const postService = PostService(db);
+        return postService.addPost(body);
       },
     },
     editPost: {
@@ -108,27 +108,26 @@ export const Mutations = new GraphQLObjectType({
         id: { type: GraphQLID },
         body: { type: new GraphQLNonNull(ChangePostInput) },
       },
-      resolve: async (source, { id, body }, context) => {
+      resolve: async (source, { id, body }, { fastify }) => {
         try {
-          const post = await postService.updatePost.apply(context.fastify.db, [
-            id,
-            body,
-          ]);
+          const postService = PostService(fastify.db);
+          const post = await postService.updatePost(id, body);
           return post;
         } catch {
-          throw context.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest();
         }
       },
     },
     deletePost: {
       type: postType,
       args: { id: { type: new GraphQLNonNull(GraphQLID) } },
-      resolve: async (source, { id }, context) => {
+      resolve: async (source, { id }, { fastify }) => {
         try {
-          const post = await postService.removePost.apply(context.fastify.db, [id]);
+          const postService = PostService(fastify.db);
+          const post = await postService.removePost(id);
           return post;
         } catch {
-          throw context.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest();
         }
       },
     },
@@ -136,7 +135,11 @@ export const Mutations = new GraphQLObjectType({
       type: profileType,
       args: { body: { type: new GraphQLNonNull(CreateProfileInput) } },
       resolve: async (source, { body }, context) => {
-        return profileService.addProfile.apply(context.fastify.db, [body]);
+        const {
+          fastify: { db },
+        } = context;
+        const profileService = ProfileService(db);
+        return profileService.addProfile(body);
       },
     },
     editProfile: {
@@ -145,29 +148,26 @@ export const Mutations = new GraphQLObjectType({
         id: { type: GraphQLID },
         body: { type: new GraphQLNonNull(ChangeProfileInput) },
       },
-      resolve: async (source, { id, body }, context) => {
+      resolve: async (source, { id, body }, { fastify }) => {
         try {
-          const profile = await profileService.updateProfile.apply(context.fastify.db, [
-            id,
-            body,
-          ]);
+          const profileService = ProfileService(fastify.db);
+          const profile = await profileService.updateProfile(id, body);
           return profile;
         } catch {
-          throw context.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest();
         }
       },
     },
     deleteProfile: {
       type: profileType,
       args: { id: { type: new GraphQLNonNull(GraphQLID) } },
-      resolve: async (source, { id }, context) => {
+      resolve: async (source, { id }, { fastify }) => {
         try {
-          const profile = await profileService.removeProfile.apply(context.fastify.db, [
-            id,
-          ]);
+          const profileService = ProfileService(fastify.db);
+          const profile = await profileService.removeProfile(id);
           return profile;
         } catch {
-          throw context.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest();
         }
       },
     },
@@ -177,15 +177,13 @@ export const Mutations = new GraphQLObjectType({
         id: { type: GraphQLID },
         body: { type: new GraphQLNonNull(ChangeMemberTypeInput) },
       },
-      resolve: async (source, { id, body }, context) => {
+      resolve: async (source, { id, body }, { fastify }) => {
         try {
-          const memberType = await memberTypeService.updateMemberType.apply(
-            context.fastify.db,
-            [id, body]
-          );
+          const memberTypeService = MemberTypeService(fastify.db);
+          const memberType = await memberTypeService.updateMemberType(id, body);
           return memberType;
         } catch {
-          throw context.httpErrors.badRequest();
+          throw fastify.httpErrors.badRequest();
         }
       },
     },

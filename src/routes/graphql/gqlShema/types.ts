@@ -1,4 +1,3 @@
-import { ProfileEntity } from './../../../utils/DB/entities/DBProfiles';
 import {
   GraphQLObjectType,
   GraphQLInputObjectType,
@@ -10,11 +9,13 @@ import {
   GraphQLNonNull,
 } from 'graphql';
 import DataLoader from 'dataloader';
+import { ProfileEntity } from './../../../utils/DB/entities/DBProfiles';
+import { PostEntity } from './../../../utils/DB/entities/DBPosts';
 import {
-  profileService,
-  // postService,
-  // userService,
-  // memberTypeService,
+  ProfileService,
+  PostService,
+  UserService,
+  MemberTypeService,
 } from '../../../services';
 
 export const postType = new GraphQLObjectType({
@@ -40,12 +41,10 @@ export const profileType = new GraphQLObjectType({
     userId: { type: new GraphQLNonNull(GraphQLID) },
     memberType: {
       type: new GraphQLNonNull(memberTypeType),
-      resolve: async (source, args, context, info) => {
+      resolve: async (source, args, { fastify }, info) => {
         const { memberTypeId } = source;
-        return context.fastify.db.memberTypes.findOne({
-          key: 'id',
-          equals: memberTypeId,
-        });
+        const memberTypeService = MemberTypeService(fastify.db);
+        return memberTypeService.getMemberTypeById(memberTypeId);
       },
     },
   }),
@@ -69,58 +68,59 @@ export const userType: GraphQLOutputType = new GraphQLObjectType({
     email: { type: new GraphQLNonNull(GraphQLString) },
     subscribedToUser: {
       type: new GraphQLList(userType),
-      resolve: async (source, args, context) =>
-        Promise.all(
-          source.subscribedToUserIds.map(async (id: string) =>
-            context.fastify.db.users.findOne({ key: 'id', equals: id })
-          )
-        ),
+      resolve: async (source, args, context) => {
+        const {
+          fastify: { db },
+        } = context;
+        const userServise = UserService(db);
+        return userServise.getUsersByIds(source.subscribedToUserIds);
+      },
     },
     userSubscribedTo: {
       type: new GraphQLList(userType),
-      resolve: async (source, args, context) =>
-        context.fastify.db.users.findMany({
-          key: 'subscribedToUserIds',
-          inArray: source.id,
-        }),
+      resolve: async (source, args, context) => {
+        const {
+          fastify: { db },
+        } = context;
+        const userServise = UserService(db);
+        return userServise.getUserSubscribedTo(source.id);
+      },
     },
     profile: {
       type: profileType,
-      resolve: async (source, args, context, info) => {
-        const { dataloaders } = context;
-
-        // единожды инициализируем DataLoader для получения профилей по ids
+      resolve: async (source, args, { fastify, dataloaders }, info) => {
+        const profileService = ProfileService(fastify.db);
         let dl = dataloaders.get(info.fieldNodes);
         if (!dl) {
           dl = new DataLoader(async (ids: any) => {
-            // обращаемся в базу чтоб получить профили по ids
-            const rows = await profileService.getProfilesByUserIds.apply(
-              context.fastify.db,
-              [ids]
-            );
-            // IMPORTANT: сортируем данные из базы в том порядке, как нам передали ids
+            const rows = await profileService.getProfilesByUserIds(ids);
             const sortedInIdsOrder = ids.map((id: string) =>
-              rows.find((row: ProfileEntity) => row.id === id)
+              rows.find((row: ProfileEntity) => row.userId === id)
             );
             return sortedInIdsOrder;
           });
-          // ложим инстанс дата-лоадера в WeakMap для повторного использования
           dataloaders.set(info.fieldNodes, dl);
         }
-
-        // юзаем метод `load` из нашего дата-лоадера
         return dl.load(source.id);
-        /* вместо того, как было без DataLoader
-        return profileService.getProfileByUserId.apply(context.fastify.db, [
-          source.id,
-        ]);
-*/
       },
     },
     posts: {
       type: new GraphQLList(postType),
-      resolve: async (source, args, context) =>
-        context.fastify.db.posts.findMany({ key: 'userId', equals: source.id }),
+      resolve: async (source, args, { fastify, dataloaders }, info) => {
+        const postService = PostService(fastify.db);
+        let dl = dataloaders.get(info.fieldNodes);
+        if (!dl) {
+          dl = new DataLoader(async (ids: any) => {
+            const rows = await postService.getPostsByUserIds(ids);
+            const sortedInIdsOrder = ids.map((id: string) =>
+              rows.find((row: PostEntity) => row.userId === id)
+            );
+            return sortedInIdsOrder;
+          });
+          dataloaders.set(info.fieldNodes, dl);
+        }
+        return dl.load(source.id);
+      },
     },
   }),
 });

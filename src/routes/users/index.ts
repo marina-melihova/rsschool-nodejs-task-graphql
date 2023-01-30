@@ -6,15 +6,14 @@ import {
   subscribeBodySchema,
 } from './schemas';
 import type { UserEntity } from '../../utils/DB/entities/DBUsers';
-import * as userService from '../../services/userService';
+import { UserService } from './../../services/userService';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
+  const userServise = UserService(fastify.db);
   fastify.get('/', async function (request, reply): Promise<UserEntity[]> {
-    console.log('getUsers');
-    fastify.log.info('hello world');
-    return userService.getUsers.apply(fastify.db);
+    return userServise.getUsers();
   });
 
   fastify.get(
@@ -26,9 +25,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     },
     async function (request, reply): Promise<UserEntity> {
       const { id } = request.params;
-      const user = await userService.getSingleUser.apply(fastify.db, [id]);
+      const user = await userServise.getUserById(id);
       if (!user) {
-        throw this.httpErrors.notFound();
+        throw this.httpErrors.notFound('User not found');
       }
       return user;
     }
@@ -42,7 +41,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
-      return userService.addUser.apply(fastify.db, [request.body]);
+      return userServise.addUser(request.body);
     }
   );
 
@@ -56,10 +55,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     async function (request, reply): Promise<UserEntity> {
       try {
         const { id } = request.params;
-        const user = await userService.removeUser.apply(fastify.db, [id]);
+        const user = await userServise.removeUser(id);
         return user;
       } catch {
-        throw this.httpErrors.badRequest();
+        throw this.httpErrors.badRequest("User's ID is incorrect");
       }
     }
   );
@@ -74,15 +73,14 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     },
     async function (request, reply): Promise<UserEntity> {
       try {
-        const { userId } = request.body;
-        const { id } = request.params;
-        const user = await userService.subscribeTo.apply(fastify.db, [
-          id,
-          userId,
-        ]);
+        const {
+          body: { userId },
+          params: { id },
+        } = request;
+        const user = await userServise.subscribeTo(id, userId);
         return user;
       } catch {
-        throw this.httpErrors.badRequest();
+        throw this.httpErrors.badRequest('ID is incorrect');
       }
     }
   );
@@ -97,15 +95,14 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     },
     async function (request, reply): Promise<UserEntity> {
       try {
-        const { userId } = request.body;
-        const { id } = request.params;
-        const newUser = await userService.unsubscribeFrom.apply(fastify.db, [
-          id,
-          userId,
-        ]);
+        const {
+          body: { userId },
+          params: { id },
+        } = request;
+        const newUser = await userServise.unsubscribeFrom(id, userId);
         return newUser;
       } catch {
-        throw this.httpErrors.badRequest();
+        throw this.httpErrors.badRequest('ID is incorrect');
       }
     }
   );
@@ -120,14 +117,14 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     },
     async function (request, reply): Promise<UserEntity> {
       try {
-        const { id } = request.params;
-        const user = await userService.updateUser.apply(fastify.db, [
-          id,
-          request.body,
-        ]);
+        const {
+          body,
+          params: { id },
+        } = request;
+        const user = await userServise.updateUser(id, body);
         return user;
       } catch {
-        throw this.httpErrors.badRequest();
+        throw this.httpErrors.badRequest('Data is incorrect');
       }
     }
   );

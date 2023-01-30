@@ -7,7 +7,6 @@ export default fp(async (fastify, options): Promise<void> => {
   fastify.decorate('db', db);
 
   if (options?.seed) {
-    console.log('options.seed :>> ', options?.seed);
     await seedData(fastify);
   }
 });
