@@ -11,7 +11,7 @@ import {
 } from 'graphql';
 import DataLoader from 'dataloader';
 import { ProfileEntity } from './../../../utils/DB/entities/DBProfiles';
-import { PostEntity } from './../../../utils/DB/entities/DBPosts';
+// import { PostEntity } from './../../../utils/DB/entities/DBPosts';
 import {
   ProfileService,
   PostService,
@@ -107,20 +107,9 @@ export const userType: GraphQLOutputType = new GraphQLObjectType({
     },
     posts: {
       type: new GraphQLList(postType),
-      resolve: async (source, args, { fastify, dataloaders }, info) => {
+      resolve: async (source, args, { fastify }) => {
         const postService = PostService(fastify.db);
-        let dl = dataloaders.get(info.fieldNodes);
-        if (!dl) {
-          dl = new DataLoader(async (ids: any) => {
-            const rows = await postService.getPostsByUserIds(ids);
-            const sortedInIdsOrder = ids.map((id: string) =>
-              rows.find((row: PostEntity) => row.userId === id)
-            );
-            return sortedInIdsOrder;
-          });
-          dataloaders.set(info.fieldNodes, dl);
-        }
-        return dl.load(source.id);
+        return postService.getPostsByUserIds(source.id);
       },
     },
   }),

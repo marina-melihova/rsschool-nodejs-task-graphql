@@ -7,9 +7,10 @@ import type {
 export const PostService = (db: DB) => {
   const getPosts = async () => db.posts.findMany();
 
-  const getPostsByUserIds = async (id: string) =>
-    db.posts.findMany({ key: 'userId', equals: id });
-
+  const getPostsByUserIds = async (ids: string[]) => {
+    console.log('getPostsByUserIds');
+    return db.posts.findMany({ key: 'userId', equalsAnyOf: ids });
+  }
   const getPostById = async (id: string) =>
     db.posts.findOne({ key: 'id', equals: id });
 
