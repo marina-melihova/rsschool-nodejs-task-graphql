@@ -110,6 +110,8 @@ Seed database by fake data:
 npm run start:seed
 ```
 
+**If you encounter problems launching the application to try changing file path in scripts of package.json from `dist/app.js` to `dist/src/app.js`**
+
 ## 💻 How to use
 
 The application will run on `http://localhost:3000` and you can use Postman to send REST requests from this url.
