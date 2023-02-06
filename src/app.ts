@@ -2,10 +2,10 @@ import { join } from 'path';
 import AutoLoad from '@fastify/autoload';
 import { FastifyPluginAsync } from 'fastify';
 
-const app: FastifyPluginAsync = async (fastify): Promise<void> => {
+const app: FastifyPluginAsync = async (fastify, options): Promise<void> => {
   fastify.register(AutoLoad, {
     dir: join(__dirname, 'plugins'),
-    options: {},
+    options,
   });
 
   fastify.register(AutoLoad, {

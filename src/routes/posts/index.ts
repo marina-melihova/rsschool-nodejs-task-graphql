@@ -2,11 +2,15 @@ import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-sc
 import { idParamSchema } from '../../utils/reusedSchemas';
 import { createPostBodySchema, changePostBodySchema } from './schema';
 import type { PostEntity } from '../../utils/DB/entities/DBPosts';
+import { PostService } from '../../services';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
-  fastify.get('/', async function (request, reply): Promise<PostEntity[]> {});
+  const postService = PostService(fastify.db);
+  fastify.get('/', async function (request, reply): Promise<PostEntity[]> {
+    return postService.getPosts();
+  });
 
   fastify.get(
     '/:id',
@@ -15,7 +19,13 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {}
+    async function ({ params: { id } }, reply): Promise<PostEntity> {
+      const post = await postService.getPostById(id);
+      if (!post) {
+        throw fastify.httpErrors.notFound('Post not found');
+      }
+      return post;
+    }
   );
 
   fastify.post(
@@ -25,7 +35,14 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         body: createPostBodySchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {}
+    async function ({ body }, reply): Promise<PostEntity> {
+      try {
+        const post = await postService.addPost(body);
+        return post;
+      } catch {
+        throw fastify.httpErrors.badRequest('Data is incorrect');
+      }
+    }
   );
 
   fastify.delete(
@@ -35,7 +52,14 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {}
+    async function ({ params: { id } }, reply): Promise<PostEntity> {
+      try {
+        const post = await postService.removePost(id);
+        return post;
+      } catch {
+        throw fastify.httpErrors.badRequest('ID is incorrect');
+      }
+    }
   );
 
   fastify.patch(
@@ -46,7 +70,14 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {}
+    async function ({ params: { id }, body }, reply): Promise<PostEntity> {
+      try {
+        const post = await postService.updatePost(id, body);
+        return post;
+      } catch {
+        throw fastify.httpErrors.badRequest('Data is incorrect');
+      }
+    }
   );
 };
 

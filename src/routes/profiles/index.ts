@@ -2,13 +2,15 @@ import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-sc
 import { idParamSchema } from '../../utils/reusedSchemas';
 import { createProfileBodySchema, changeProfileBodySchema } from './schema';
 import type { ProfileEntity } from '../../utils/DB/entities/DBProfiles';
+import { ProfileService } from '../../services';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
-  fastify.get('/', async function (request, reply): Promise<
-    ProfileEntity[]
-  > {});
+  const profileService = ProfileService(fastify.db);
+  fastify.get('/', async function (request, reply): Promise<ProfileEntity[]> {
+    return profileService.getProfiles();
+  });
 
   fastify.get(
     '/:id',
@@ -17,7 +19,13 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async function ({ params: { id } }, reply): Promise<ProfileEntity> {
+      const profile = await profileService.getProfileById(id);
+      if (!profile) {
+        throw fastify.httpErrors.notFound('Profile not found');
+      }
+      return profile;
+    }
   );
 
   fastify.post(
@@ -27,7 +35,14 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         body: createProfileBodySchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async function ({ body }, reply): Promise<ProfileEntity> {
+      try {
+        const profile = await profileService.addProfile(body);
+        return profile;
+      } catch {
+        throw fastify.httpErrors.badRequest('Data is incorrect');
+      }
+    }
   );
 
   fastify.delete(
@@ -37,7 +52,14 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async function ({ params: { id } }, reply): Promise<ProfileEntity> {
+      try {
+        const profile = await profileService.removeProfile(id);
+        return profile;
+      } catch {
+        throw fastify.httpErrors.badRequest('ID is incorrect');
+      }
+    }
   );
 
   fastify.patch(
@@ -48,7 +70,14 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async function ({ params: { id }, body }, reply): Promise<ProfileEntity> {
+      try {
+        const profile = await profileService.updateProfile(id, body);
+        return profile;
+      } catch {
+        throw fastify.httpErrors.badRequest('Data is incorrect');
+      }
+    }
   );
 };
 
